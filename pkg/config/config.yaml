@@ -1,0 +1,39 @@
+mantiProtocol: "http"
+mantiIP: "127.0.0.1"
+mantiPort: "9312"
+mantiRotation: "daily"
+geoDirectory: "/var/www/html/data/geoip/GeoLite2-Country.mmdb"
+logs:
+  - name: access_log
+    address: "127.0.0.1:9999"
+    protocol: "UDP"
+    queue: 10000000
+    workerProcesses: 50
+    createTable: "CREATE TABLE {table_name}(id bigint,data json) rt_mem_limit='10M'"
+    isJson: true
+    appendDate: true
+    geo:
+      - field: "dest_ip"
+        tag: "dest_country"
+    rules:
+      - condition:
+          field: "host"
+          isEmpty: true
+          name: "invalid_request"
+      - condition:
+          field: "user_agent"
+          isEmpty: true
+          name: "invalid_request"
+  - name: error_log
+    address: "127.0.0.1:9998"
+    protocol: "UDP"
+    queue: 10000000
+    workerProcesses: 10
+    createTable: "CREATE TABLE {table_name}(id bigint,data json) rt_mem_limit='10M'"
+    isJson: false
+    appendDate: true
+    rules:
+      - condition:
+          field: "msg"
+          contains: "policy violation"
+          name: "policy_violation"
